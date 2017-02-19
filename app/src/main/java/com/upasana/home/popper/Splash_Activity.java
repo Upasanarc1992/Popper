@@ -17,7 +17,7 @@ public class Splash_Activity extends AppCompatActivity {
 
         SystemClock.sleep(3000);
 
-        Intent intent = new Intent(this, Level_screen.class);
+        Intent intent = new Intent(this, StartUp.class);
         startActivity(intent);
         finish();
     }

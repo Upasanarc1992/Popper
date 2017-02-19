@@ -1,16 +1,35 @@
 package com.upasana.home.popper;
 
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.media.AudioManager;
+import android.media.SoundPool;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
+import android.util.DisplayMetrics;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 
-public class Level_screen extends AppCompatActivity implements View.OnClickListener{
+public class Level_screen extends AppCompatActivity {
 
-    Button b1,b2,b3,b4,b5,b6;
+    public static int screen_width, screen_height;
+
+
+    Bitmap level_btn[], background;
+    int b_x, b_y;
+    int b1_x, b2_x;
+    int b1_y;
+    SoundPool sp;
+    int id;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -21,71 +40,172 @@ public class Level_screen extends AppCompatActivity implements View.OnClickListe
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
-        setContentView(R.layout.activity_main);
+        setContentView(new Level_screen.myview(this));
 
-        b1=(Button)findViewById(R.id.l1);
-        b1.setOnClickListener(this);
-        b2=(Button)findViewById(R.id.l2);
-        b2.setOnClickListener(this);
-        b3=(Button)findViewById(R.id.l3);
-        b3.setOnClickListener(this);
-        b4=(Button)findViewById(R.id.l4);
-        b4.setOnClickListener(this);
-        b5=(Button)findViewById(R.id.l5);
-        b5.setOnClickListener(this);
-        b6=(Button)findViewById(R.id.l6);
-        b6.setOnClickListener(this);
+//========= GETTING SCREEN RRESOLUTION & CONTEXT ====================================================================================
+
+        DisplayMetrics displayMetrics = this.getResources().getDisplayMetrics();
+        screen_width = displayMetrics.widthPixels;
+        screen_height = displayMetrics.heightPixels;
+
+//========= SETTING BITMAPS AND BUTTON POSITIONS ====================================================================================
+
+
+        level_btn=new Bitmap[6];
+
+        if(background!=null) {
+            background.recycle();
+            background = null;
+        }
+
+        background = BitmapFactory.decodeResource(getResources(), R.drawable.l1);
+        background = StartUp.getResizedBitmap(background,screen_height, screen_width);
+
+        level_btn[0] = BitmapFactory.decodeResource(getResources(), R.drawable.l11);
+        level_btn[1] = BitmapFactory.decodeResource(getResources(), R.drawable.l2);
+        level_btn[2] = BitmapFactory.decodeResource(getResources(), R.drawable.l3);
+        level_btn[3] = BitmapFactory.decodeResource(getResources(), R.drawable.l4);
+        level_btn[4] = BitmapFactory.decodeResource(getResources(), R.drawable.l5);
+        level_btn[5] = BitmapFactory.decodeResource(getResources(), R.drawable.l6);
+
+
+        for (int i = 0; i < level_btn.length; i++)
+            level_btn[i] = Bitmap.createScaledBitmap(level_btn[i], (int) (2 * screen_width / 9), (int) (2* screen_height / 15), true);
+
+        b_x = (int) (screen_width / 9);
+        b1_x=b_x+(int)(5*screen_width/18);
+        b2_x=b1_x+(int)(5*screen_width/18);
+        b_y = (int) (12 * screen_height / 30);
+        b1_y= (int) (17 * screen_height / 30);
+
+
+        id=R.raw.press;
+        sp = new SoundPool(2, AudioManager.STREAM_MUSIC, 0);
+        id=sp.load(this,id,1);
 
 
     }
+
+
     @Override
-    public void onClick(View v) {
+    public boolean onTouchEvent(MotionEvent event) {
 
-        if(v.equals(b1))
-        {
-            Intent intent = new Intent(this, MainActivity.class);
-            this.startActivity(intent);
+        int pressX = (int) event.getX();
+        int pressY = (int) event.getY();
+
+        int action = event.getAction();
+
+        if (action == MotionEvent.ACTION_DOWN) {
+
+            if (pressX > b_x &&
+                    pressX < b_x + level_btn[0].getWidth() &&
+                    pressY > b_y &&
+                    pressY < b_y + level_btn[0].getHeight()
+                    ) {
+                sp.play(id, 1, 1, 0, 0, 1);
+                Intent intent = new Intent(this, MainActivity.class);
+                startActivity(intent);
+                finish();
+            }
+            if (pressX > b1_x &&
+                    pressX < b1_x + level_btn[0].getWidth() &&
+                    pressY > b_y &&
+                    pressY < b_y + level_btn[0].getHeight()
+                    ) {
+                sp.play(id, 1, 1, 0, 0, 1);
+                Intent intent = new Intent(this, Level_2.class);
+                startActivity(intent);
+                finish();
+            }
+            if (pressX > b2_x &&
+                    pressX < b2_x + level_btn[0].getWidth() &&
+                    pressY > b_y &&
+                    pressY < b_y + level_btn[0].getHeight()
+                    ) {
+                sp.play(id, 1, 1, 0, 0, 1);
+                Intent intent = new Intent(this, Level_3.class);
+                startActivity(intent);
+                finish();
+            }
+            if (pressX > b_x &&
+                    pressX < b_x + level_btn[0].getWidth() &&
+                    pressY > b1_y &&
+                    pressY < b1_y + level_btn[0].getHeight()
+                    ) {
+                sp.play(id, 1, 1, 0, 0, 1);
+                Intent intent = new Intent(this, Level_4.class);
+                startActivity(intent);
+                finish();
+            }
+            if (pressX > b1_x &&
+                    pressX < b1_x + level_btn[0].getWidth() &&
+                    pressY > b1_y &&
+                    pressY < b1_y + level_btn[0].getHeight()
+                    ) {
+                sp.play(id, 1, 1, 0, 0, 1);
+                Intent intent = new Intent(this, Level_5.class);
+                startActivity(intent);
+                finish();
+            }
+            if (pressX > b2_x &&
+                    pressX < b2_x + level_btn[0].getWidth() &&
+                    pressY > b1_y &&
+                    pressY < b1_y + level_btn[0].getHeight()
+                    ) {
+                sp.play(id, 1, 1, 0, 0, 1);
+                Intent intent = new Intent(this, Level_6.class);
+                startActivity(intent);
+                finish();
+            }
+
+
+
+        }
+        return false;
+    }
+
+
+//============== CLICKING PLAW NOW BUTTON ==============================================================================================
+
+    class myview extends View {
+
+
+        public myview(Context context) {
+            super(context);
         }
 
-        if(v.equals(b2))
-        {
-            Intent intent = new Intent(this, Level_2.class);
-            this.startActivity(intent);
+        @Override
+        public void onDraw(Canvas canvas) {
+
+            canvas.drawBitmap(background, 0, 0, null);
+            canvas.drawBitmap(level_btn[0], b_x, b_y, null);
+            canvas.drawBitmap(level_btn[1], b1_x, b_y, null);
+            canvas.drawBitmap(level_btn[2], b2_x, b_y, null);
+            canvas.drawBitmap(level_btn[3], b_x, b1_y, null);
+            canvas.drawBitmap(level_btn[4], b1_x, b1_y, null);
+            canvas.drawBitmap(level_btn[5], b2_x, b1_y, null);
 
         }
+    }
 
-        if(v.equals(b3))
+    @Override
+    public void onBackPressed()
+    {
+        Intent intent = new Intent(this, StartUp.class);
+        startActivity(intent);
+        finish();
+    }
+
+
+    @Override
+    public void finish() {
+        //android.os.Process.killProcess(android.os.Process.myPid());
+
+        super.finish();
+        if(background!=null)
         {
-            Intent intent = new Intent(this, Level_3.class);
-            this.startActivity(intent);
-
+            background.recycle();
+            background=null;
         }
-
-
-        if(v.equals(b4))
-        {
-            Intent intent = new Intent(this, Level_4.class);
-            this.startActivity(intent);
-
-        }
-
-
-        if(v.equals(b5))
-        {
-            Intent intent = new Intent(this, Level_5.class);
-            this.startActivity(intent);
-
-        }
-
-
-        if(v.equals(b6))
-        {
-            Intent intent = new Intent(this, Level_6.class);
-            this.startActivity(intent);
-
-        }
-
-
-
     }
 }

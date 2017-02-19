@@ -40,7 +40,7 @@ public class Baloons {
         for (int i = 0; i < img.length; i++) {
             pic[i]=Bitmap.createScaledBitmap(img[i],5+(int)(scale*img[i].getWidth()),5+(int)(scale*img[i].getHeight()),true);
         }
-        baloon_x = (int) (10 + screen_width * Math.random() * 0.75);                             //Initial x position
+        baloon_x = (int) (10 + screen_width * Math.random() * 0.75);                                  //Initial x position
         baloon_y = (int) (screen_height*0.75 - screen_height * Math.random() * 0.3);                  //Initial y position
         speed_y = (int) (3 + Math.random() * 8 * sreen_dpi);
         alpha = 0;
@@ -77,7 +77,16 @@ public class Baloons {
     }
 
     public void poop() {
-        if(alpha>250)
         popped = true;
+    }
+
+    public void clean()
+    {
+        for(int i=0;i<3;i++)
+        if(pic[i]!=null)
+        {
+            pic[i].recycle();
+            pic[i]=null;
+        }
     }
 }

@@ -1,6 +1,7 @@
 package com.upasana.home.popper;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -29,31 +30,27 @@ public class MainActivity extends AppCompatActivity {
     public static float screen_dpi;
     public static Context context;
     public static Resources resource;
-
+    public long mLastMove;
+    public RefreshHandler mRedrawHandler = new RefreshHandler();
     SoundPool sp;
     MediaPlayer mp;
     Bitmap bg;
     Bitmap gameover;
-    Paint paint;
+    int gameover_y;
+    Paint paint,p;
     int score;
     int life;
-
     Clouds cloud[];
     Baloons baloon[];
     Candy candy[];
-
-
     int image[] = new int[3];
     int temp[] = new int[3];
     int b_image[][] = new int[6][3];
     int goodies[] = new int[12];
-
     int sound[] = new int[5];
     int s_pool[] = new int[5];
     int danger;
-
-    public long mLastMove;
-    public RefreshHandler mRedrawHandler = new RefreshHandler();
+    boolean running;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,6 +75,13 @@ public class MainActivity extends AppCompatActivity {
         resource = getResources();
         initialize();
         load_resources();
+
+//========= GAME OVER SCREEN ==================================================================================================
+
+        gameover = BitmapFactory.decodeResource(getResources(), R.drawable.gameover1);
+        gameover = Bitmap.createScaledBitmap(gameover, (int) (screen_width / 1.5), (int) (screen_height / 2), true);
+        gameover_y = -10;
+
 //========= SETTING MEDIA PLAYERS ==================================================================================================
 
         mp = MediaPlayer.create(context, R.raw.bg_clip);
@@ -107,23 +111,29 @@ public class MainActivity extends AppCompatActivity {
         }
 
         sp = new SoundPool(12, AudioManager.STREAM_MUSIC, 0);
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 4; i++) {
             s_pool[i] = 0;
             s_pool[i] = sp.load(this, sound[i], 1);
 
         }
+
+        running=true;
     }
 
     public void initialize() {
-        score=0;
-        life=10;
+        score = 0;
+        life = 10;
 
         bg = BitmapFactory.decodeResource(getResources(), R.drawable.bg1);
         bg = Bitmap.createScaledBitmap(bg, screen_width, screen_height, true);
 
         cloud = new Clouds[4];
         baloon = new Baloons[3];
+        for(int i=0;i<baloon.length;i++)
+            candy[i].clean();
         candy = new Candy[5];
+        for(int i=0;i<candy.length;i++)
+            candy[i].clean();
     }
 
     public void load_resources() // TO LOAD ALL RESOURCE FILES
@@ -131,9 +141,17 @@ public class MainActivity extends AppCompatActivity {
 //============== PAINT INITIALIZATION ==============================================================================================
         paint = new Paint();
         paint.setColor(Color.BLACK);
-        paint.setTextSize((int)(15*screen_dpi));
-       // Typeface font = Typeface.createFromAsset(context.getAssets(), "fonts/myfont");
-        //paint.setTypeface(font);
+        paint.setTextSize((int) (22 * screen_dpi));
+        Typeface font = Typeface.createFromAsset(context.getAssets(), "fonts/myfont.TTF");
+        paint.setTypeface(font);
+        paint.setTextAlign(Paint.Align.RIGHT);
+
+        p = new Paint();
+        p.setColor(Color.BLACK);
+        p.setAlpha(75);
+        p.setTextSize((int) (50 * screen_dpi));
+        p.setTypeface(font);
+        p.setTextAlign(Paint.Align.CENTER);
 
 //============== CLOUD ==============================================================================================
         image[0] = R.drawable.cloud3;
@@ -175,6 +193,7 @@ public class MainActivity extends AppCompatActivity {
         sound[0] = R.raw.pop;
         sound[1] = R.raw.catch_clip;
         sound[2] = R.raw.bomb;
+        sound[3]= R.raw.gameover;
     }
 
     public void update() {
@@ -185,65 +204,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         mRedrawHandler.sleep((int) (25 / screen_dpi));
-    }
-
-
-    class myview extends View {
-
-
-        public myview(Context context) {
-            super(context);
-        }
-
-        @Override
-        public void onDraw(Canvas canvas) {
-
-            canvas.drawBitmap(bg, 0, 0, null);
-
-            for (int i = 0; i < cloud.length; i++) {
-                cloud[i].move();
-                cloud[i].draw(canvas);
-            }
-
-            if(life<=0)
-            {
-                gameover = BitmapFactory.decodeResource(getResources(), R.drawable.gameover);
-                gameover = Bitmap.createScaledBitmap(gameover, screen_width/2, screen_height/3, true);
-                canvas.drawBitmap(gameover, (int)(screen_width/4),(int)(screen_height/3) , null);
-            }
-            else {
-
-
-                for (int i = 0; i < candy.length; i++) {
-                    candy[i].move();
-                    candy[i].draw(canvas);
-                }
-                for (int i = 0; i < baloon.length; i++) {
-                    baloon[i].move();
-                    baloon[i].draw(canvas);
-                }
-            }
-            float text_x = screen_width-(120*screen_dpi);
-            float text_y = 60;
-            canvas.drawText("SCORE    "+score, text_x, text_y, paint);
-            text_y+=20*screen_dpi ;
-            canvas.drawText("LIFE      "+life, text_x, text_y, paint);
-
-            update();
-        }
-    }
-
-    public class RefreshHandler extends Handler {
-        @Override
-        public void handleMessage(Message msg) {
-            MainActivity.this.update();
-        }
-
-        public void sleep(long delayMillis) {
-            this.removeMessages(0);
-            sendMessageDelayed(obtainMessage(0), delayMillis);
-        }
-
     }
 
     @Override
@@ -261,7 +221,7 @@ public class MainActivity extends AppCompatActivity {
                 if (pressX > baloon[i].baloon_x &&
                         pressX < baloon[i].baloon_x + baloon[i].pic[0].getWidth() &&
                         pressY > baloon[i].baloon_y &&
-                        pressY < baloon[i].baloon_y + baloon[i].pic[0].getHeight()
+                        pressY < baloon[i].baloon_y + baloon[i].pic[0].getHeight() && life > 0
                         ) {
                     if (s_pool[0] != 0)
                         sp.play(s_pool[0], 1, 1, 0, 0, 1);
@@ -279,15 +239,17 @@ public class MainActivity extends AppCompatActivity {
                 if (pressX > candy[i].candy_x &&
                         pressX < candy[i].candy_x + candy[i].pic.getWidth() &&
                         pressY > candy[i].candy_y &&
-                        pressY < candy[i].candy_y + candy[i].pic.getHeight()
+                        pressY < candy[i].candy_y + candy[i].pic.getHeight() && life > 0
                         ) {
-                    if (candy[i].danger == 0){
+                    if (candy[i].danger == 0) {
                         sp.play(s_pool[1], 1, 1, 0, 0, 1);
-                        score+=10;
-                    }
-                    else{
+                        score += 10;
+                    } else {
                         sp.play(s_pool[2], 1, 1, 0, 0, 1);
                         life--;
+                        if(life<=0)
+                            sp.play(s_pool[3], 1, 1, 0, 0, 1);
+
                     }
 
                     candy[i].poop();
@@ -305,8 +267,89 @@ public class MainActivity extends AppCompatActivity {
         mp.release();
         sp.release();
 
+        Intent intent = new Intent(this, StartUp.class);
+        startActivity(intent);
+        running=false;
         finish();
+
     }
+
+    class myview extends View {
+
+
+        public myview(Context context) {
+            super(context);
+        }
+
+        @Override
+        public void onDraw(Canvas canvas) {
+            if(running) {
+                canvas.drawBitmap(bg, 0, 0, null);
+
+                for (int i = 0; i < cloud.length; i++) {
+                    cloud[i].move();
+                    cloud[i].draw(canvas);
+                }
+
+                if (life <= 0) {
+                    if (gameover_y < screen_height / 3) {
+                        gameover_y += 5;
+                    }
+                    canvas.drawBitmap(gameover, (int) (screen_width / 6), gameover_y, null);
+                    canvas.drawText(String.valueOf(score), (int) (screen_width / 2), (int) (gameover_y + screen_height / 3.8), p);
+                } else {
+
+
+                    for (int i = 0; i < candy.length; i++) {
+                        candy[i].move();
+                        candy[i].draw(canvas);
+                    }
+                    for (int i = 0; i < baloon.length; i++) {
+                        baloon[i].move();
+                        baloon[i].draw(canvas);
+                    }
+                }
+                float text_x = screen_width - (20 * screen_dpi);
+                float text_y = 60;
+                canvas.drawText(String.valueOf(score), text_x, text_y, paint);
+                text_y += 20 * screen_dpi;
+                canvas.drawText("LIFE      " + life, text_x, text_y, paint);
+
+                update();
+            }
+        }
+    }
+
+    public class RefreshHandler extends Handler {
+        @Override
+        public void handleMessage(Message msg) {
+            MainActivity.this.update();
+        }
+
+        public void sleep(long delayMillis) {
+            this.removeMessages(0);
+            sendMessageDelayed(obtainMessage(0), delayMillis);
+        }
+
+    }
+
+    @Override
+    public void finish() {
+        //android.os.Process.killProcess(android.os.Process.myPid());
+
+        super.finish();
+        if(bg!=null)
+        {
+            bg.recycle();
+            bg=null;
+        }
+        for(int i=0;i<candy.length;i++)
+        {
+            candy[i].clean();
+        }
+
+    }
+
 }
 
 

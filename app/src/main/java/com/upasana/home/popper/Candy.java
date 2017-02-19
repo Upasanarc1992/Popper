@@ -35,7 +35,6 @@ public class Candy {
     }
 
     public void born(int x, int y) {
-
         pic=Bitmap.createScaledBitmap(img,(int)(scale*img.getWidth()),(int)(scale*img.getHeight()),true);
 
         candy_x = x;                                               //Initital x position
@@ -64,6 +63,15 @@ public class Candy {
 
             Paint p = new Paint();
             c.drawBitmap(pic, candy_x, candy_y, p);
+        }
+    }
+
+    public void clean()
+    {
+        if(pic!=null)
+        {
+            pic.recycle();
+            pic=null;
         }
     }
 
